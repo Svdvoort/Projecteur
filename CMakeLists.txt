@@ -1,5 +1,15 @@
 cmake_minimum_required(VERSION 3.6)
 
+# Find GStreamer core and appsink plugin
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0>=1.16)
+pkg_check_modules(GSTREAMER_APP REQUIRED gstreamer-app-1.0)
+
+include_directories(
+    ${GSTREAMER_INCLUDE_DIRS}
+    ${GSTREAMER_APP_INCLUDE_DIRS}
+)
+
 # Use QTDIR environment variable with find_package,
 #  e.g. set QTDIR=/home/user/Qt/5.9.6/gcc_64/
 if(NOT "$ENV{QTDIR}" STREQUAL "")
@@ -140,8 +150,11 @@ add_executable(projecteur
 target_include_directories(projecteur PRIVATE src)
 
 target_link_libraries(projecteur
-  PRIVATE ${QT_PACKAGE_NAME}::Core ${QT_PACKAGE_NAME}::Quick ${QT_PACKAGE_NAME}::Widgets
+  PRIVATE ${QT_PACKAGE_NAME}::Core ${QT_PACKAGE_NAME}::Quick ${QT_PACKAGE_NAME}::Widgets ${GSTREAMER_LIBRARIES}
+    ${GSTREAMER_APP_LIBRARIES}
+
 )
+
 
 if(HAS_Qt_X11Extras)
   if(${QT_PACKAGE_NAME}_VERSION VERSION_LESS "6.0")
@@ -151,6 +164,9 @@ if(HAS_Qt_X11Extras)
 else()
   message(STATUS "Compiling without Qt5::X11Extras.")
 endif()
+
+target_compile_options(projecteur PRIVATE ${GSTREAMER_CFLAGS_OTHER})
+
 
 if(HAS_Qt_DBus)
   target_link_libraries(projecteur PRIVATE ${QT_PACKAGE_NAME}::DBus)
